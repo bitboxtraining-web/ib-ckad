@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: whoami-and-clock-with-init
+spec:
+  terminationGracePeriodSeconds: 2
+  initContainers:
+    - name: timer
+      image: debian:10-slim
+      command:
+        - bash
+        - -c
+        - for i in {1..15}; do date; sleep 1s; done
+  containers:
+    - name: whoami
+      image: containous/whoami:latest
+      imagePullPolicy: IfNotPresent
+      ports:
+        - containerPort: 80
+    - name: clock
+      image: debian:10-slim
+      command:
+        - bash
+        - -c
+        - while true; do date | tee /dev/stderr; sleep 1; done

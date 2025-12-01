@@ -1,0 +1,25 @@
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: frontend-rebirth
+  labels:
+    app: frontend
+    level: novice
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+      level: novice
+  template:
+    metadata:
+      labels:
+        app: frontend
+        level: novice
+    spec:
+      containers:
+        - name: nginx-fe-4-rs
+          image: nginx:stable-alpine
+          ports:
+            - containerPort: 80

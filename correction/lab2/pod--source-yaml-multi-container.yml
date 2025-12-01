@@ -1,0 +1,36 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: yaml-pod
+  labels:
+    run: yaml-pod
+spec:
+  containers:
+    - name: yaml-pod
+      image: containous/whoami:latest
+      ports:
+        - containerPort: 80
+    - name: shell-in-pod
+      image: zenika/k8s-training-tools:v1
+      imagePullPolicy: Always
+# 'command' => equivalent au 'entrypoint' docker
+# 'args' => equivalent au 'cmd' docker
+# Alternative : 'command' avec sleep+shell
+#      command:
+#        - bash
+#        - -c
+#        - sleep infinity
+# Alternative: 'command' avec sleep en PID 1
+#      command:
+#        - sleep
+#        - infinity
+# Alternative: 'args' plutôt que 'command'
+#      args:
+#        - sleep
+#        - infinity
+# Alternative: 'command' et 'args' qui collaborent
+      command:
+        - sleep
+      args:
+        - infinity

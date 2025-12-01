@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: light-sleeper
+  labels:
+    from-descriptor: yaml
+spec:
+  nodeSelector:
+    container-runtime: docker
+  containers:
+    - name: sleeper
+      image: debian:10-slim
+      command:
+        - bash
+        - -c
+        - sleep 3d
