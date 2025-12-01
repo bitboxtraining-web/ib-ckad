@@ -59,35 +59,7 @@ kubectl apply -f ~/workspaces/Lab7/deploy--bitboxtraining-v1--7.1.yml --record
 ```
 - Check the state of the Deployment and the associated ReplicaSet and Pods
 
-## Service 
-- Create the associated Service with the following descriptor (source:~/workspaces/Lab7/svc--bitboxtraining.yml):
-```bash
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: bitboxtraining-svc
-  labels:
-    app: bitboxtraining
-spec:
-  selector:
-    app: bitboxtraining
-  ports:
-    - name: main
-      protocol: TCP
-      port: 80
-      targetPort: main
 
-```
-- If needed recreate the gateway Pod used during the Lab4.1:
-```bash
-yq 'del(.metadata.namespace)' ~/workspaces/Lab4/pod--gateway.yml | kubectl apply -f -
-```
-- Connect in the gateway Pod and launch the command:
-```bash
-while true ; do curl --silent http://bitboxtraining-svc ; sleep 1 ; done
-``` 
-- (leave the command running and open a new terminal tab for the next part)
 ## Update the Deployment to v2
 - Update the Deployment descriptor, and change the image tag value to v2
 - Apply the change

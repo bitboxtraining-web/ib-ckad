@@ -192,3 +192,71 @@ kubectl get $(kubectl get pod -l app=frontend,level=novice -o name | head -1) -o
 #      }
 #    ]
 ```
+## Lab 3.2: DaemonSets
+
+### Setting up the label on the nodes
+
+```shell
+kubectl label nodes --all disk=ssd
+#   node/minikube labeled
+#   node/minikube-m02 labeled
+#   node/minikube-m03 labeled
+```
+
+### First DaemonSet
+
+```shell
+kubectl apply -f ~/workspaces/Lab3/ds-ssd-tp-3.2.yml
+#    daemonset.apps/ssd-monitor created
+```
+
+```shell
+kubectl get ds
+#    NAME          DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+#    ssd-monitor   3         3         3       3            3           disk=ssd        4s
+```
+
+```shell
+kubectl get pods -l app=ssd-monitor -o wide
+#    NAME                READY   STATUS    RESTARTS   AGE   IP            NODE           NOMINATED NODE   READINESS GATES
+#    ssd-monitor-67649   1/1     Running   0          20s   10.244.1.12   minikube-m02   <none>           <none>
+#    ssd-monitor-fccdn   1/1     Running   0          20s   10.244.2.14   minikube-m03   <none>           <none>
+#    ssd-monitor-fwsdg   1/1     Running   0          20s   10.244.0.7    minikube       <none>           <none>
+```
+
+We notice that the DaemonSet has 3 Pods, one for each node.
+
+```shell
+kubectl logs -l app=ssd-monitor --prefix --tail 10
+```
+
+```shell
+kubectl delete $(kubectl get pods -l app=ssd-monitor -o name | head -1) --now
+#    pod "ssd-monitor-67649" deleted
+
+kubectl get pods -l app=ssd-monitor
+#    NAME                READY   STATUS    RESTARTS   AGE
+#    ssd-monitor-fccdn   1/1     Running   0          70s
+#    ssd-monitor-fwsdg   1/1     Running   0          70s
+#    ssd-monitor-rdbg8   1/1     Running   0          10s
+```
+
+### Changing the Node label
+
+```shell
+kubectl label $(kubectl get nodes -l disk -o name | head -1) disk=hdd --overwrite
+#    node/minikube labeled
+```
+
+```shell
+kubectl get ds
+#    NAME          DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+#    ssd-monitor   2         2         2       2            2           disk=ssd        87s
+
+kubectl get pods -l app=ssd-monitor
+#    NAME                READY   STATUS    RESTARTS   AGE
+#    ssd-monitor-fccdn   1/1     Running   0          108s
+#    ssd-monitor-rdbg8   1/1     Running   0          48s
+```
+
+The Pod is removed from the node that doesn't match the label.

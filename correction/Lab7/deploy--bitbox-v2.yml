@@ -1,0 +1,45 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bitboxtraining
+  labels:
+    app: bitboxtraining
+spec:
+  replicas: 3
+  minReadySeconds: 5
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: bitboxtraining
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: bitboxtraining
+    spec:
+      containers:
+        - name: app
+          image: bitboxtraining/k8s-training-deploy:v2
+          ports:
+            - name: main
+              containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /.healthcheck
+              port: 8080
+            periodSeconds: 5
+            initialDelaySeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /.readicheck
+              port: 8080
+            periodSeconds: 5
+            initialDelaySeconds: 5
+          resources:
+            requests:
+              cpu: 30m
