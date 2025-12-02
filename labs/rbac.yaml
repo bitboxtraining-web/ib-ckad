@@ -1,0 +1,107 @@
+# 📝 TP Kubernetes — ServiceAccount & RBAC
+
+## Objectif
+- Créer un **ServiceAccount**  
+- Définir un **Role** avec lecture des Pods  
+- Attacher le Role au ServiceAccount via un **RoleBinding**  
+- Tester les permissions depuis un Pod utilisant ce ServiceAccount
+
+---
+
+## 1️⃣ Créer le ServiceAccount `app-sa`
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: app-sa
+  namespace: default
+``` 
+```bash
+kubectl apply -f sa.yaml
+```
+✅ Ce ServiceAccount sera utilisé par notre Pod.
+
+2️⃣ Créer le Role pod-reader
+Permissions : lire les Pods (get, list, watch)
+
+Namespace : default
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-reader
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+```
+```bash
+kubectl apply -f role.yaml
+```
+3️⃣ Créer le RoleBinding
+Lien entre ServiceAccount app-sa et Role pod-reader
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pod-reader-binding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: app-sa
+    namespace: default
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
+```
+```bash
+kubectl apply -f bind.yaml
+```
+4️⃣ Créer un Pod utilisant le ServiceAccount
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-app
+  namespace: default
+spec:
+  serviceAccountName: app-sa
+  containers:
+    - name: curl
+      image: curlimages/curl
+      command: ["sleep", "3600"]
+```
+```bash
+kubectl apply -f test.yaml
+```
+5️⃣ Tester depuis le Pod
+5.1 Entrer dans le Pod
+```bash
+kubectl exec -it test-app -- sh
+```
+5.2 Lister les Pods (lecture autorisée)
+```bash
+TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+
+curl -k -H "Authorization: Bearer $TOKEN" https://kubernetes.default.svc/api/v1/pods
+```
+✅ La liste des pods s’affiche.
+
+5.3 Supprimer un Pod (interdit)
+```bash
+curl -X DELETE -k -H "Authorization: Bearer $TOKEN" https://kubernetes.default.svc/api/v1/namespaces/default/pods/test-app
+```
+❌ Résultat attendu : Forbidden
+Le ServiceAccount ne peut pas supprimer de Pod.
+
+6️⃣ Résumé
+Élément	Rôle
+ServiceAccount	Qui ? Identité machine utilisée par un Pod (app-sa)
+Role	Quoi ? Permissions limitées aux actions de lecture des Pods (pod-reader)
+RoleBinding	Lien : attribue le Role au ServiceAccount (pod-reader-binding)
+Test	Lecture autorisée, suppression interdite
